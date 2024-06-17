@@ -13,7 +13,7 @@ void get_password(char *password, int size) {
     int i = 0;
     int ch;
 
-    // Disabilita l'echo
+    // Disabilito l'echo
     tcgetattr(STDIN_FILENO, &oldt);
     newt = oldt;
     newt.c_lflag &= ~(ECHO);
@@ -26,7 +26,7 @@ void get_password(char *password, int size) {
     }
     password[i] = '\0';
 
-    // Riabilita l'echo
+    // Riabilito l'echo
     tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
     printf("\n");
 }
@@ -114,12 +114,12 @@ void handle_registration(int socket) {
     snprintf(message, sizeof(message), "REGISTER\n%s\n%s\n", username, password);
     send(socket, message, strlen(message), 0);
 
-    // Attendere la risposta del server
+    // Attendo la risposta del server
     char response[256];
     int valread = read(socket, response, sizeof(response) - 1);
     response[valread] = '\0';
 
-    // Se la registrazione ha successo, procedi alla dashboard
+    // Se la registrazione ha successo, si procede alla dashboard di registrazione / login
     if (strcmp(response, "REGISTRATION_SUCCESS") == 0) {
         printf("\nRegistrazione avvenuta con successo.\n");
         
@@ -144,13 +144,13 @@ void handle_login(int socket) {
     snprintf(message, sizeof(message), "LOGIN\n%s\n%s\n", username, password);
     send(socket, message, strlen(message), 0);
 
-    // Attendere la risposta del server
+    // Attendo la risposta del server
     char response[256];
     int valread = read(socket, response, sizeof(response) - 1);
     response[valread] = '\0';
     
 
-    // Se il login ha successo, procedi alla dashboard
+    // Se il login ha successo, si procede alla dashboard utente
     if (strcmp(response, "LOGIN_SUCCESS") == 0) {
         printf("\nLogin avvenuto con successo! Benvenuto %s!\n", username);
         handle_dashboard(socket);
@@ -170,7 +170,7 @@ void handle_dashboard(int socket) {
         printf("5. Logout\n");
         printf("\nInserisci la tua scelta: ");
         scanf("%d", &choice);
-        getchar(); // Pulire il buffer del newline
+        getchar(); // Pulisco il buffer del newline
 
         switch (choice) {
             case 1:
@@ -194,11 +194,11 @@ void handle_dashboard(int socket) {
     } while (choice != 5);
 }
 void handle_view_books(int socket) {
-    // Invia la richiesta al server per ottenere tutti i libri disponibili
+    // Invio la richiesta al server per ottenere tutti i libri disponibili
     send(socket, "VIEW_BOOKS\n", strlen("VIEW_BOOKS\n"), 0);
     
     // Ricezione dei dati dal server
-    char buffer[2048];  // Un buffer ragionevolmente grande
+    char buffer[2048];  
     int total_bytes_received = 0;
     int bytes_received = 0;
 
@@ -207,19 +207,19 @@ void handle_view_books(int socket) {
         // Termina la stringa ricevuta con '\0'
         buffer[bytes_received] = '\0';
         
-        // Stampa i dati ricevuti
+        // Stampo i dati ricevuti
         printf("%s", buffer);
 
-        // Aggiungi i bytes ricevuti al totale
+        // Aggiungo i bytes ricevuti al totale
         total_bytes_received += bytes_received;
 
-        // Se abbiamo riempito il buffer e non ci sono più dati da leggere, esci dal loop
+        // Se abbiamo riempito il buffer e non ci sono più dati da leggere, si esce dal loop
         if (bytes_received < sizeof(buffer) - 1) {
             break;
         }
     }
 
-    // Se non abbiamo ricevuto alcun dato, stampa un messaggio di errore
+    // Se non abbiamo ricevuto alcun dato, stampo un messaggio di errore
     if (total_bytes_received == 0) {
         printf("\nNon ci sono libri disponibili / errore nella ricezione dati.\n");
     }
@@ -230,7 +230,7 @@ void handle_view_books(int socket) {
 void handle_reserve_book(int socket) {
     char book_id[100];
 
-    // Chiedi all'utente di inserire l'ID del libro da prenotare
+    
     printf("\nInserisci l'ID del libro da prenotare: ");
     fgets(book_id, sizeof(book_id), stdin);
     book_id[strcspn(book_id, "\n")] = '\0'; // Rimuove il newline
@@ -241,14 +241,14 @@ void handle_reserve_book(int socket) {
         return;
     }
 
-    // Prepara il messaggio di prenotazione
+    // Preparo il messaggio di prenotazione
     char message[256];
     snprintf(message, sizeof(message), "RESERVE\n%s\n", book_id);
 
-    // Invia la richiesta di prenotazione al server
+    // Invio la richiesta di prenotazione al server
     send(socket, message, strlen(message), 0);
 
-    // Attendere la risposta del server
+    // Attendo la risposta del server
     char response[256];
     int valread = recv(socket, response, sizeof(response) - 1, 0);
     
@@ -261,7 +261,7 @@ void handle_reserve_book(int socket) {
     // Termina la stringa ricevuta con '\0'
     response[valread] = '\0';
 
-    // Gestisci la risposta dal server
+    // Gestione della risposta dal server
     if (strcmp(response, "RESERVATION_SUCCESS") == 0) {
         printf("\nPrenotazione avvenuta con successo.\n");
     } else if (strcmp(response, "RESERVATION_FAILURE") == 0) {
@@ -277,17 +277,17 @@ void handle_cancel_reservation(int socket) {
     fgets(reservation_id, sizeof(reservation_id), stdin);
     reservation_id[strcspn(reservation_id, "\n")] = '\0'; // Rimuove il newline
 
-    // Invia richiesta di annullamento prenotazione al server
+    // Invio richiesta di annullamento prenotazione al server
     char message[256];
     snprintf(message, sizeof(message), "CANCEL_RESERVATION\n%s\n", reservation_id);
     send(socket, message, strlen(message), 0);
 
-    // Attendere la risposta del server
+    // Attendo la risposta del server
     char response[256];
     int valread = read(socket, response, sizeof(response) - 1);
     response[valread] = '\0';
 
-    // Gestisci la risposta dal server
+    // Gestione della risposta dal server
     if (strcmp(response, "CANCEL_RESERVATION_SUCCESS") == 0) {
         printf("\nPrenotazione annullata con successo!.\n");
     } else if (strcmp(response, "CANCEL_RESERVATION_FAILURE") == 0) {
@@ -297,29 +297,29 @@ void handle_cancel_reservation(int socket) {
 
 
 void handle_view_reservations(int socket) {
-    // Invia richiesta al server per visualizzare le prenotazioni dell'utente
+    // Invio della richiesta al server per visualizzare le prenotazioni dell'utente
     send(socket, "VIEW_MY_RESERVATIONS\n", strlen("VIEW_MY_RESERVATIONS\n"), 0);
 
-    // Riceve la risposta del server e la visualizza
+    // Ricezione della risposta del server e la visualizza
     char buffer[2048]; // Aumentiamo il buffer per gestire risposte più grandi
     int total_bytes_received = 0;
     int bytes_received;
 
     printf("\n==== Le mie prenotazioni ====\n");
 
-    // Ricevi i dati dal server in un ciclo finché c'è ancora qualcosa da ricevere
+    // Ricevzione dei dati dal server in un ciclo finché c'è ancora qualcosa da ricevere
     while ((bytes_received = recv(socket, buffer, sizeof(buffer) - 1, 0)) > 0) {
-        buffer[bytes_received] = '\0'; // Assicura che la stringa ricevuta sia terminata correttamente
-        printf("%s", buffer); // Stampa i dati ricevuti
+        buffer[bytes_received] = '\0'; // vado ad assicurarmi che la stringa ricevuta sia terminata correttamente
+        printf("%s", buffer);
         total_bytes_received += bytes_received;
 
-        // Se abbiamo riempito il buffer e non ci sono più dati da leggere, esci dal loop
+        // Se abbiamo riempito il buffer e non ci sono più dati da leggere, si esce dal loop
         if (bytes_received < sizeof(buffer) - 1) {
             break;
         }
     }
 
-    // Se non abbiamo ricevuto alcun dato, stampa un messaggio di errore
+    // Se non abbiamo ricevuto alcun dato, stampo un messaggio di errore
     if (total_bytes_received == 0) {
         printf("\n\nNessuna prenotazione trovata o errore nella ricezione dei dati.\n");
     }
