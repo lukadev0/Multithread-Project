@@ -15,7 +15,7 @@ pthread_mutex_t db_mutex;
 typedef struct {
     int socket;
     char username[100];
-} ClientContext;  // Definizione di ClientContext
+} ClientContext;  
 
 void *handle_client(void *arg);
 void init_db();
@@ -189,7 +189,7 @@ void view_books(int client_socket) {
             snprintf(buffer, sizeof(buffer), "Nessun libro disponibile.\n");
         }
 
-        buffer[sizeof(buffer) - 1] = '\0'; // Assicura che il buffer sia terminato correttamente
+        buffer[sizeof(buffer) - 1] = '\0'; // Assicuro che il buffer sia terminato correttamente
         send_response(client_socket, buffer);
         fflush(stdout); // Flush del buffer di output
     }
@@ -234,9 +234,9 @@ void handle_reserve_book(int client_socket, char *book_id_str, int user_id) {
 
     char *err_msg = 0;
     sqlite3_stmt *stmt;
-    int book_id = atoi(book_id_str); // Converti l'ID del libro da stringa a intero
+    int book_id = atoi(book_id_str); // Converto l'ID del libro da stringa a intero
 
-    // Verifica la disponibilità del libro
+    // Verifico la disponibilità del libro
     char *sql_check_availability = "SELECT disponibilita FROM libro WHERE id = ?;";
     int rc = sqlite3_prepare_v2(db, sql_check_availability, -1, &stmt, 0);
     if (rc != SQLITE_OK) {
@@ -272,7 +272,7 @@ void handle_reserve_book(int client_socket, char *book_id_str, int user_id) {
         return;
     }
 
-    // Inserisci la prenotazione
+    // Inserisco la prenotazione
     char *sql_insert_reservation = "INSERT INTO prenotazione (matricola, id_libro) VALUES (?, ?);";
     rc = sqlite3_prepare_v2(db, sql_insert_reservation, -1, &stmt, 0);
     if (rc != SQLITE_OK) {
@@ -295,7 +295,7 @@ void handle_reserve_book(int client_socket, char *book_id_str, int user_id) {
 
     sqlite3_finalize(stmt);
 
-    // Aggiorna la disponibilità del libro
+    // Aggiorno la disponibilità del libro
     char *sql_update_availability = "UPDATE libro SET disponibilita = disponibilita - 1 WHERE id = ?;";
     rc = sqlite3_prepare_v2(db, sql_update_availability, -1, &stmt, 0);
     if (rc != SQLITE_OK) {
@@ -317,7 +317,7 @@ void handle_reserve_book(int client_socket, char *book_id_str, int user_id) {
 
     sqlite3_finalize(stmt);
 
-    // Termina la transazione
+    // Termino la transazione
     char *sql_commit_transaction = "COMMIT;";
     rc = sqlite3_exec(db, sql_commit_transaction, 0, 0, &err_msg);
     if (rc != SQLITE_OK) {
@@ -328,7 +328,7 @@ void handle_reserve_book(int client_socket, char *book_id_str, int user_id) {
         return;
     }
 
-    // Se tutte le operazioni sono avvenute con successo, invia il successo della prenotazione al client
+    // Se tutte le operazioni sono avvenute con successo, invio il successo della prenotazione al client
     send_response(client_socket, "RESERVATION_SUCCESS");
 
     pthread_mutex_unlock(&db_mutex);
@@ -336,7 +336,7 @@ void handle_reserve_book(int client_socket, char *book_id_str, int user_id) {
 void view_my_reservations(int client_socket, const char *username) {
     pthread_mutex_lock(&db_mutex);
 
-    // Prepara la query SQL con un placeholder per l'username
+    // Preparazione della query SQL con un placeholder per l'username
     const char *sql = "SELECT p.id, l.titolo, l.autore, l.categoria, l.anno_pubblicazione "
                       "FROM prenotazione p "
                       "JOIN utente u ON p.matricola = u.matricola "
@@ -349,7 +349,7 @@ void view_my_reservations(int client_socket, const char *username) {
         fprintf(stderr, "SQL error: %s\n", sqlite3_errmsg(db));
         send_response(client_socket, "VIEW_MY_RESERVATIONS_FAILURE");
     } else {
-        // Bind the username to the first placeholder
+        // Bind dell'username
         sqlite3_bind_text(res, 1, username, -1, SQLITE_STATIC);
 
         char buffer[2048] = ""; // Buffer per memorizzare i risultati
@@ -393,7 +393,7 @@ void cancel_reservation(int client_socket, int reservation_id) {
         return;
     }
 
-    // Recupera l'id del libro dalla prenotazione
+    // Recupero l'id del libro dalla prenotazione
     char *sql_get_book_id = "SELECT id_libro FROM prenotazione WHERE id = ?;";
     rc = sqlite3_prepare_v2(db, sql_get_book_id, -1, &stmt, 0);
     if (rc != SQLITE_OK) {
@@ -411,7 +411,7 @@ void cancel_reservation(int client_socket, int reservation_id) {
     sqlite3_finalize(stmt);
 
     if (book_id == -1) {
-        // Se non troviamo il book_id, falliamo l'operazione
+        // Se non troviamo il book_id, fallisce l'operazione
         send_response(client_socket, "CANCEL_RESERVATION_FAILURE");
         pthread_mutex_unlock(&db_mutex);
         return;
@@ -472,7 +472,7 @@ void cancel_reservation(int client_socket, int reservation_id) {
         return;
     }
 
-    // Se tutte le operazioni sono avvenute con successo, invia il successo della cancellazione al client
+    // Se tutte le operazioni sono avvenute con successo, invio il successo della cancellazione al client
     send_response(client_socket, "CANCEL_RESERVATION_SUCCESS");
 
     pthread_mutex_unlock(&db_mutex);
